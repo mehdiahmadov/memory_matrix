@@ -1,4 +1,4 @@
-Levels = {
+var Levels = {
   1:  { id: 1,  board: 'xs',   tiles:  9,  active: 3 },
   2:  { id: 2,  board: 'xs',   tiles:  9,  active: 4 },
   3:  { id: 3,  board: 'xs',   tiles:  9,  active: 5 },
@@ -19,7 +19,11 @@ Levels = {
   18: { id: 18, board: 'xxl',  tiles:  64, active: 20  },
   19: { id: 19, board: 'xxxl', tiles:  81, active: 21  },
   20: { id: 20, board: 'xxxl', tiles:  81, active: 22  },
-  21: { id: 21, board: 'xxxl', tiles:  81, active: 23  }
+  21: { id: 21, board: 'xxxl', tiles:  81, active: 23  },
+  22: { id: 21, board: 'xxxl', tiles:  81, active: 24  },
+  23: { id: 21, board: 'xxxl', tiles:  81, active: 25  },
+  24: { id: 21, board: 'xxxl', tiles:  81, active: 26  },
+  25: { id: 21, board: 'xxxl', tiles:  81, active: 27  }
 };
 
 module.exports = Levels;

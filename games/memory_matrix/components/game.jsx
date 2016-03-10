@@ -196,6 +196,7 @@ var Game = React.createClass({
       game: 1
     });
     this.addScore(100);
+    this.openBoard();
     this.showModal();
   },
 
@@ -217,8 +218,8 @@ var Game = React.createClass({
           <li><h1>GREAT JOB!</h1></li>
           <li><button onClick={
             function (){
-              this.levelUp();
               this.hideModal();
+              this.levelUp();
             }.bind(this)
           }>Next Level</button></li>
         </ul>
@@ -232,8 +233,8 @@ var Game = React.createClass({
           <li><h1>Your score: {this.state.score}</h1></li>
           <li><button onClick={
             function (){
-              this.restart();
               this.hideModal();
+              this.restart();
             }.bind(this)
           }>Start Again</button></li>
         </ul>
@@ -252,6 +253,7 @@ var Game = React.createClass({
         <div className="board-container">
           <Board board   = {this.state.level.board}
                  tiles   = {this.state.tiles}
+                 id      = {this.state.level.id}
                  />
         </div>
       </div>

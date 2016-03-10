@@ -11,7 +11,7 @@ var Board = React.createClass({
     });
 
     return(
-      <div className="board">
+      <div className="board  animated bounceIn" key={this.props.id}>
         <ul className={ 'tile-container ' + this.props.board}>
             {tiles}
         </ul>
