@@ -3,11 +3,11 @@ var ReactDOM = require('react-dom');
 
 
 var Board = React.createClass({
-  
+
   render: function () {
 
-    var tiles = this.props.tiles.map(function(tile){
-      return <li className="tile" >{tile}</li>;
+    var tiles = this.props.tiles.map(function(tile, idx){
+      return <li className="tile" key={idx}>{tile}</li>;
     });
 
     return(

@@ -111,6 +111,8 @@ var Game = React.createClass({
             <Tile active={tileState}
                   status={1}
                   id={i}
+                  key={i}
+                  move={ function() {} }
                   />
             );
       tileState = 0;
@@ -126,7 +128,9 @@ var Game = React.createClass({
       return(
         <Tile active={tile.props.active}
               status={1}
-              move ={ function() {} } />
+              key={tile.props.id}
+              move ={ function() {} }
+              />
       );
     });
 
@@ -141,7 +145,8 @@ var Game = React.createClass({
         <Tile active={tile.props.active}
               status={0}
               id={tile.props.id}
-              move ={this.move} />
+              key={tile.props.id}
+              move={this.move} />
       );
     }, this);
 
@@ -157,6 +162,7 @@ var Game = React.createClass({
           <Tile active={tile.props.active}
                 status={1}
                 id={tile.props.id}
+                key={tile.props.id}
                 move ={ this.move } />
         );
       } else {

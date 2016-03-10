@@ -19792,7 +19792,9 @@
 	      }
 	      tiles.push(React.createElement(Tile, { active: tileState,
 	        status: 1,
-	        id: i
+	        id: i,
+	        key: i,
+	        move: function () {}
 	      }));
 	      tileState = 0;
 	    }
@@ -19806,7 +19808,9 @@
 	    var tiles = this.state.tiles.map(function (tile) {
 	      return React.createElement(Tile, { active: tile.props.active,
 	        status: 1,
-	        move: function () {} });
+	        key: tile.props.id,
+	        move: function () {}
+	      });
 	    });
 	
 	    this.setState({
@@ -19819,6 +19823,7 @@
 	      return React.createElement(Tile, { active: tile.props.active,
 	        status: 0,
 	        id: tile.props.id,
+	        key: tile.props.id,
 	        move: this.move });
 	    }, this);
 	
@@ -19833,6 +19838,7 @@
 	        return React.createElement(Tile, { active: tile.props.active,
 	          status: 1,
 	          id: tile.props.id,
+	          key: tile.props.id,
 	          move: this.move });
 	      } else {
 	        return tile;
@@ -19988,10 +19994,10 @@
 	
 	  render: function () {
 	
-	    var tiles = this.props.tiles.map(function (tile) {
+	    var tiles = this.props.tiles.map(function (tile, idx) {
 	      return React.createElement(
 	        'li',
-	        { className: 'tile' },
+	        { className: 'tile', key: idx },
 	        tile
 	      );
 	    });
