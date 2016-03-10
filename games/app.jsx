@@ -1,12 +1,12 @@
 var React = require('react');
 var ReactDOM = require('react-dom');
-var Display = require('./memory_matrix/components/display');
+var Game = require('./memory_matrix/components/game');
 
 var App = React.createClass({
   render: function () {
     return(
       <div className="display">
-        <Display />
+        <Game />
       </div>
     );
   }

@@ -7,9 +7,9 @@ var Info = React.createClass({
     return(
       <div id="info">
         <ul>
-          <li>TILES 10</li>
-          <li>TRIAL 4 of 12</li>
-          <li>SCORE 5600</li>
+          <li>{"LEVEL " + this.props.game.level.id}</li>
+          <li>{"TILES " + this.props.game.founded.length  + " of " + this.props.game.level.active}</li>
+          <li>{"SCORE " + this.props.game.score}</li>
         </ul>
       </div>
     );

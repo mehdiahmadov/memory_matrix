@@ -19659,7 +19659,7 @@
 
 	var React = __webpack_require__(1);
 	var ReactDOM = __webpack_require__(158);
-	var Display = __webpack_require__(160);
+	var Game = __webpack_require__(160);
 	
 	var App = React.createClass({
 	  displayName: 'App',
@@ -19668,7 +19668,7 @@
 	    return React.createElement(
 	      'div',
 	      { className: 'display' },
-	      React.createElement(Display, null)
+	      React.createElement(Game, null)
 	    );
 	  }
 	});
@@ -19683,46 +19683,57 @@
 	var ReactDOM = __webpack_require__(158);
 	var Board = __webpack_require__(161);
 	var Info = __webpack_require__(162);
+	var Levels = __webpack_require__(163);
+	var Tile = __webpack_require__(173);
+	var Modal = __webpack_require__(164);
+	var TimerMixin = __webpack_require__(174);
 	
-	var Display = React.createClass({
-	  displayName: 'Display',
+	var Game = React.createClass({
+	  displayName: 'Game',
 	
-	  render: function () {
-	    return React.createElement(
-	      'div',
-	      { className: 'mm-display' },
-	      React.createElement(Info, null),
-	      React.createElement(
-	        'div',
-	        { className: 'board-container' },
-	        React.createElement(Board, null)
-	      )
-	    );
-	  }
-	});
-	
-	module.exports = Display;
-
-/***/ },
-/* 161 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var React = __webpack_require__(1);
-	var ReactDOM = __webpack_require__(158);
-	var Pile = __webpack_require__(163);
-	
-	var Board = React.createClass({
-	  displayName: 'Board',
-	
+	  mixins: [TimerMixin],
 	
 	  getInitialState: function () {
 	    return {
-	      piles: []
+	      level: Levels[1],
+	      tiles: [],
+	      game: undefined,
+	      founded: [],
+	      score: 0
 	    };
 	  },
 	
-	  componentDidMount: function () {
+	  componentWillMount: function () {
+	    this.runBoard();
+	  },
+	
+	  componentDidUpdate: function () {
+	    if (this.state.tiles.length === 0) {
+	      this.runBoard();
+	    }
+	  },
+	
+	  runBoard: function () {
 	    this.generateBoard();
+	    this.setTimeout(function () {
+	      this.closeBoard();
+	    }.bind(this), 3000);
+	  },
+	
+	  levelUp: function () {
+	    var maxLevel = Object.keys(Levels).length;
+	    var currentLevel = this.state.level.id;
+	    if (currentLevel === maxLevel) {
+	      this.showModal();
+	    } else {
+	      currentLevel++;
+	      this.setState({
+	        level: Levels[currentLevel],
+	        tiles: [],
+	        msg: "",
+	        founded: []
+	      });
+	    }
 	  },
 	
 	  shuffleArray: function (array) {
@@ -19735,40 +19746,263 @@
 	    return array;
 	  },
 	
-	  generateBoard: function () {
-	    var pileState = 0;
-	    var activePiles = 3;
-	    var piles = [];
-	
-	    for (var i = 0; i < 81; i++) {
-	      if (activePiles > 0) {
-	        pileState = 1;
-	        activePiles--;
+	  move: function (id, active) {
+	    this.openTile(id);
+	    if (active === 0) {
+	      this.gameOver();
+	    } else if (active === 1) {
+	      this.addFounded(id);
+	      if (this.state.founded.length === this.state.level.active) {
+	        this.won();
 	      }
-	      piles.push(React.createElement(
-	        'li',
-	        { className: 'pile' },
-	        React.createElement(Pile, { active: pileState, key: i })
-	      ));
-	      pileState = 0;
 	    }
+	  },
 	
-	    piles = this.shuffleArray(piles);
+	  addFounded: function (id) {
+	    if (this.state.founded.indexOf(id) === -1) {
+	      var arr = this.state.founded;
+	      arr.push(id);
+	      this.setState({
+	        founded: arr
+	      });
+	      this.addScore(10);
+	    }
+	  },
 	
+	  addScore: function (add) {
 	    this.setState({
-	      piles: piles
+	      score: this.state.score + add
 	    });
 	  },
 	
+	  generateBoard: function () {
+	    if (this.state.tiles.length !== 0) {
+	      return;
+	    }
+	
+	    var tileState = 0;
+	    var activeTiles = this.state.level.active;
+	    var tilesNumber = this.state.level.tiles;
+	    var board = this.state.level.board;
+	    var tiles = [];
+	    for (var i = 0; i < tilesNumber; i++) {
+	      if (activeTiles > 0) {
+	        tileState = 1;
+	        activeTiles--;
+	      }
+	      tiles.push(React.createElement(Tile, { active: tileState,
+	        status: 1,
+	        id: i
+	      }));
+	      tileState = 0;
+	    }
+	    tiles = this.shuffleArray(tiles);
+	    this.setState({
+	      tiles: tiles
+	    });
+	  },
+	
+	  openBoard: function () {
+	    var tiles = this.state.tiles.map(function (tile) {
+	      return React.createElement(Tile, { active: tile.props.active,
+	        status: 1,
+	        move: function () {} });
+	    });
+	
+	    this.setState({
+	      tiles: tiles
+	    });
+	  },
+	
+	  closeBoard: function () {
+	    var tiles = this.state.tiles.map(function (tile) {
+	      return React.createElement(Tile, { active: tile.props.active,
+	        status: 0,
+	        id: tile.props.id,
+	        move: this.move });
+	    }, this);
+	
+	    this.setState({
+	      tiles: tiles
+	    });
+	  },
+	
+	  openTile: function (id) {
+	    var tiles = this.state.tiles.map(function (tile) {
+	      if (tile.props.id === id) {
+	        return React.createElement(Tile, { active: tile.props.active,
+	          status: 1,
+	          id: tile.props.id,
+	          move: this.move });
+	      } else {
+	        return tile;
+	      }
+	    }, this);
+	
+	    this.setState({
+	      tiles: tiles
+	    });
+	  },
+	
+	  showModal: function (content) {
+	    this.refs.modal.show();
+	  },
+	
+	  hideModal: function () {
+	    this.refs.modal.hide();
+	  },
+	
+	  gameOver: function () {
+	    this.setState({
+	      game: 0
+	    });
+	    this.openBoard();
+	    this.showModal();
+	  },
+	
+	  won: function () {
+	    this.setState({
+	      game: 1
+	    });
+	    this.addScore(100);
+	    this.showModal();
+	  },
+	
+	  restart: function () {
+	    this.setState({
+	      level: Levels[1],
+	      tiles: [],
+	      game: undefined,
+	      founded: [],
+	      score: 0
+	    });
+	  },
+	
+	  modalContent: function () {
+	    if (this.state.game === 1) {
+	      return React.createElement(
+	        'div',
+	        { className: 'modal won' },
+	        React.createElement(
+	          'ul',
+	          null,
+	          React.createElement(
+	            'li',
+	            null,
+	            React.createElement(
+	              'h1',
+	              null,
+	              'GREAT JOB!'
+	            )
+	          ),
+	          React.createElement(
+	            'li',
+	            null,
+	            React.createElement(
+	              'button',
+	              { onClick: function () {
+	                  this.levelUp();
+	                  this.hideModal();
+	                }.bind(this) },
+	              'Next Level'
+	            )
+	          )
+	        )
+	      );
+	    } else {
+	      return React.createElement(
+	        'div',
+	        { className: 'modal lost' },
+	        React.createElement(
+	          'ul',
+	          null,
+	          React.createElement(
+	            'li',
+	            null,
+	            React.createElement(
+	              'h1',
+	              null,
+	              'OOPS! Wrong one :-('
+	            )
+	          ),
+	          React.createElement(
+	            'li',
+	            null,
+	            React.createElement(
+	              'h1',
+	              null,
+	              'Your score: ',
+	              this.state.score
+	            )
+	          ),
+	          React.createElement(
+	            'li',
+	            null,
+	            React.createElement(
+	              'button',
+	              { onClick: function () {
+	                  this.restart();
+	                  this.hideModal();
+	                }.bind(this) },
+	              'Start Again'
+	            )
+	          )
+	        )
+	      );
+	    }
+	  },
+	
 	  render: function () {
+	    return React.createElement(
+	      'div',
+	      { className: 'mm-display' },
+	      React.createElement(
+	        Modal,
+	        { ref: 'modal', className: 'modalWindow' },
+	        this.modalContent()
+	      ),
+	      React.createElement(Info, { game: this.state }),
+	      React.createElement(
+	        'div',
+	        { className: 'board-container' },
+	        React.createElement(Board, { board: this.state.level.board,
+	          tiles: this.state.tiles
+	        })
+	      )
+	    );
+	  }
+	});
+	
+	module.exports = Game;
+
+/***/ },
+/* 161 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var React = __webpack_require__(1);
+	var ReactDOM = __webpack_require__(158);
+	
+	var Board = React.createClass({
+	  displayName: 'Board',
+	
+	
+	  render: function () {
+	
+	    var tiles = this.props.tiles.map(function (tile) {
+	      return React.createElement(
+	        'li',
+	        { className: 'tile' },
+	        tile
+	      );
+	    });
 	
 	    return React.createElement(
 	      'div',
 	      { className: 'board' },
 	      React.createElement(
 	        'ul',
-	        { className: 'pile-container xxxl' },
-	        this.state.piles
+	        { className: 'tile-container ' + this.props.board },
+	        tiles
 	      )
 	    );
 	  }
@@ -19796,17 +20030,17 @@
 	        React.createElement(
 	          'li',
 	          null,
-	          'TILES 10'
+	          "LEVEL " + this.props.game.level.id
 	        ),
 	        React.createElement(
 	          'li',
 	          null,
-	          'TRIAL 4 of 12'
+	          "TILES " + this.props.game.founded.length + " of " + this.props.game.level.active
 	        ),
 	        React.createElement(
 	          'li',
 	          null,
-	          'SCORE 5600'
+	          "SCORE " + this.props.game.score
 	        )
 	      )
 	    );
@@ -19817,46 +20051,867 @@
 
 /***/ },
 /* 163 */
+/***/ function(module, exports) {
+
+	Levels = {
+	  1: { id: 1, board: 'xs', tiles: 9, active: 3 },
+	  2: { id: 2, board: 'xs', tiles: 9, active: 4 },
+	  3: { id: 3, board: 'xs', tiles: 9, active: 5 },
+	  4: { id: 4, board: 's', tiles: 16, active: 6 },
+	  5: { id: 5, board: 's', tiles: 16, active: 7 },
+	  6: { id: 6, board: 's', tiles: 16, active: 8 },
+	  7: { id: 7, board: 'm', tiles: 25, active: 9 },
+	  8: { id: 8, board: 'm', tiles: 25, active: 10 },
+	  9: { id: 9, board: 'm', tiles: 25, active: 11 },
+	  10: { id: 10, board: 'l', tiles: 36, active: 12 },
+	  11: { id: 11, board: 'l', tiles: 36, active: 13 },
+	  12: { id: 12, board: 'l', tiles: 36, active: 14 },
+	  13: { id: 13, board: 'xl', tiles: 49, active: 15 },
+	  14: { id: 14, board: 'xl', tiles: 49, active: 16 },
+	  15: { id: 15, board: 'xl', tiles: 49, active: 17 },
+	  16: { id: 16, board: 'xxl', tiles: 64, active: 18 },
+	  17: { id: 17, board: 'xxl', tiles: 64, active: 19 },
+	  18: { id: 18, board: 'xxl', tiles: 64, active: 20 },
+	  19: { id: 19, board: 'xxxl', tiles: 81, active: 21 },
+	  20: { id: 20, board: 'xxxl', tiles: 81, active: 22 },
+	  21: { id: 21, board: 'xxxl', tiles: 81, active: 23 }
+	};
+	
+	module.exports = Levels;
+
+/***/ },
+/* 164 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var modalFactory = __webpack_require__(165);
+	var insertKeyframesRule = __webpack_require__(170);
+	var appendVendorPrefix = __webpack_require__(167);
+	
+	var animation = {
+	    show: {
+	        animationDuration: '1s',
+	        animationTimingFunction: 'linear'
+	    },
+	    hide: {
+	        animationDuration: '0.3s',
+	        animationTimingFunction: 'ease-out'
+	    },
+	    showContentAnimation: insertKeyframesRule({
+	        '0%': {
+	            opacity: 0,
+	            transform: 'matrix3d(0.7, 0, 0, 0, 0, 0.7, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)'
+	        },
+	        '2.083333%': {
+	            transform: 'matrix3d(0.75266, 0, 0, 0, 0, 0.76342, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)'
+	        },
+	        '4.166667%': {
+	            transform: 'matrix3d(0.81071, 0, 0, 0, 0, 0.84545, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)'
+	        },
+	        '6.25%': {
+	            transform: 'matrix3d(0.86808, 0, 0, 0, 0, 0.9286, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)'
+	        },
+	        '8.333333%': {
+	            transform: 'matrix3d(0.92038, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)'
+	        },
+	        '10.416667%': {
+	            transform: 'matrix3d(0.96482, 0, 0, 0, 0, 1.05202, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)'
+	        },
+	        '12.5%': {
+	            transform: 'matrix3d(1, 0, 0, 0, 0, 1.08204, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)'
+	        },
+	        '14.583333%': {
+	            transform: 'matrix3d(1.02563, 0, 0, 0, 0, 1.09149, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)'
+	        },
+	        '16.666667%': {
+	            transform: 'matrix3d(1.04227, 0, 0, 0, 0, 1.08453, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)'
+	        },
+	        '18.75%': {
+	            transform: 'matrix3d(1.05102, 0, 0, 0, 0, 1.06666, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)'
+	        },
+	        '20.833333%': {
+	            transform: 'matrix3d(1.05334, 0, 0, 0, 0, 1.04355, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)'
+	        },
+	        '22.916667%': {
+	            transform: 'matrix3d(1.05078, 0, 0, 0, 0, 1.02012, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)'
+	        },
+	        '25%': {
+	            transform: 'matrix3d(1.04487, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)'
+	        },
+	        '27.083333%': {
+	            transform: 'matrix3d(1.03699, 0, 0, 0, 0, 0.98534, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)'
+	        },
+	        '29.166667%': {
+	            transform: 'matrix3d(1.02831, 0, 0, 0, 0, 0.97688, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)'
+	        },
+	        '31.25%': {
+	            transform: 'matrix3d(1.01973, 0, 0, 0, 0, 0.97422, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)'
+	        },
+	        '33.333333%': {
+	            transform: 'matrix3d(1.01191, 0, 0, 0, 0, 0.97618, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)'
+	        },
+	        '35.416667%': {
+	            transform: 'matrix3d(1.00526, 0, 0, 0, 0, 0.98122, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)'
+	        },
+	        '37.5%': {
+	            transform: 'matrix3d(1, 0, 0, 0, 0, 0.98773, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)'
+	        },
+	        '39.583333%': {
+	            transform: 'matrix3d(0.99617, 0, 0, 0, 0, 0.99433, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)'
+	        },
+	        '41.666667%': {
+	            transform: 'matrix3d(0.99368, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)'
+	        },
+	        '43.75%': {
+	            transform: 'matrix3d(0.99237, 0, 0, 0, 0, 1.00413, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)'
+	        },
+	        '45.833333%': {
+	            transform: 'matrix3d(0.99202, 0, 0, 0, 0, 1.00651, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)'
+	        },
+	        '47.916667%': {
+	            transform: 'matrix3d(0.99241, 0, 0, 0, 0, 1.00726, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)'
+	        },
+	        '50%': {
+	            opacity: 1,
+	            transform: 'matrix3d(0.99329, 0, 0, 0, 0, 1.00671, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)'
+	        },
+	        '52.083333%': {
+	            transform: 'matrix3d(0.99447, 0, 0, 0, 0, 1.00529, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)'
+	        },
+	        '54.166667%': {
+	            transform: 'matrix3d(0.99577, 0, 0, 0, 0, 1.00346, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)'
+	        },
+	        '56.25%': {
+	            transform: 'matrix3d(0.99705, 0, 0, 0, 0, 1.0016, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)'
+	        },
+	        '58.333333%': {
+	            transform: 'matrix3d(0.99822, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)'
+	        },
+	        '60.416667%': {
+	            transform: 'matrix3d(0.99921, 0, 0, 0, 0, 0.99884, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)'
+	        },
+	        '62.5%': {
+	            transform: 'matrix3d(1, 0, 0, 0, 0, 0.99816, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)'
+	        },
+	        '64.583333%': {
+	            transform: 'matrix3d(1.00057, 0, 0, 0, 0, 0.99795, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)'
+	        },
+	        '66.666667%': {
+	            transform: 'matrix3d(1.00095, 0, 0, 0, 0, 0.99811, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)'
+	        },
+	        '68.75%': {
+	            transform: 'matrix3d(1.00114, 0, 0, 0, 0, 0.99851, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)'
+	        },
+	        '70.833333%': {
+	            transform: 'matrix3d(1.00119, 0, 0, 0, 0, 0.99903, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)'
+	        },
+	        '72.916667%': {
+	            transform: 'matrix3d(1.00114, 0, 0, 0, 0, 0.99955, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)'
+	        },
+	        '75%': {
+	            transform: 'matrix3d(1.001, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)'
+	        },
+	        '77.083333%': {
+	            transform: 'matrix3d(1.00083, 0, 0, 0, 0, 1.00033, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)'
+	        },
+	        '79.166667%': {
+	            transform: 'matrix3d(1.00063, 0, 0, 0, 0, 1.00052, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)'
+	        },
+	        '81.25%': {
+	            transform: 'matrix3d(1.00044, 0, 0, 0, 0, 1.00058, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)'
+	        },
+	        '83.333333%': {
+	            transform: 'matrix3d(1.00027, 0, 0, 0, 0, 1.00053, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)'
+	        },
+	        '85.416667%': {
+	            transform: 'matrix3d(1.00012, 0, 0, 0, 0, 1.00042, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)'
+	        },
+	        '87.5%': {
+	            transform: 'matrix3d(1, 0, 0, 0, 0, 1.00027, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)'
+	        },
+	        '89.583333%': {
+	            transform: 'matrix3d(0.99991, 0, 0, 0, 0, 1.00013, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)'
+	        },
+	        '91.666667%': {
+	            transform: 'matrix3d(0.99986, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)'
+	        },
+	        '93.75%': {
+	            transform: 'matrix3d(0.99983, 0, 0, 0, 0, 0.99991, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)'
+	        },
+	        '95.833333%': {
+	            transform: 'matrix3d(0.99982, 0, 0, 0, 0, 0.99985, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)'
+	        },
+	        '97.916667%': {
+	            transform: 'matrix3d(0.99983, 0, 0, 0, 0, 0.99984, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)'
+	        },
+	        '100%': {
+	            opacity: 1,
+	            transform: 'matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)'
+	        }
+	    }),
+	
+	    hideContentAnimation: insertKeyframesRule({
+	        '0%': {
+	            opacity: 1
+	        },
+	        '100%': {
+	            opacity: 0,
+	            transform: 'scale3d(0.8, 0.8, 1)'
+	        },
+	    }),
+	
+	    showBackdropAnimation: insertKeyframesRule({
+	        '0%': {
+	            opacity: 0
+	        },
+	        '100%': {
+	            opacity: 0.9
+	        },
+	    }),
+	
+	    hideBackdropAnimation: insertKeyframesRule({
+	        '0%': {
+	            opacity: 0.9
+	        },
+	        '100%': {
+	            opacity: 0
+	        }
+	    })
+	};
+	
+	var showAnimation = animation.show;
+	var hideAnimation = animation.hide;
+	var showContentAnimation = animation.showContentAnimation;
+	var hideContentAnimation = animation.hideContentAnimation;
+	var showBackdropAnimation = animation.showBackdropAnimation;
+	var hideBackdropAnimation = animation.hideBackdropAnimation;
+	
+	module.exports = modalFactory({
+	    getRef: function(willHidden) {
+	        return 'content';
+	    },
+	    getModalStyle: function(willHidden) {
+	        return appendVendorPrefix({
+	            zIndex: 1050,
+	            position: "fixed",
+	            width: "500px",
+	            transform: "translate3d(-50%, -50%, 0)",
+	            top: "50%",
+	            left: "50%"
+	        })
+	    },
+	    getBackdropStyle: function(willHidden) {
+	        return appendVendorPrefix({
+	            position: "fixed",
+	            top: 0,
+	            right: 0,
+	            bottom: 0,
+	            left: 0,
+	            zIndex: 1040,
+	            backgroundColor: "#373A47",
+	            animationFillMode: 'forwards',
+	            animationDuration: '0.3s',
+	            animationName: willHidden ? hideBackdropAnimation : showBackdropAnimation,
+	            animationTimingFunction: (willHidden ? hideAnimation : showAnimation).animationTimingFunction
+	        });
+	    },
+	    getContentStyle: function(willHidden) {
+	        return appendVendorPrefix({
+	            margin: 0,
+	            backgroundColor: "white",
+	            animationDuration: (willHidden ? hideAnimation : showAnimation).animationDuration,
+	            animationFillMode: 'forwards',
+	            animationName: willHidden ? hideContentAnimation : showContentAnimation,
+	            animationTimingFunction: (willHidden ? hideAnimation : showAnimation).animationTimingFunction
+	        })
+	    }
+	});
+
+
+/***/ },
+/* 165 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var React = __webpack_require__(1);
+	var transitionEvents = __webpack_require__(166);
+	var appendVendorPrefix = __webpack_require__(167);
+	
+	module.exports = function(animation){
+	
+	    return React.createClass({
+	        propTypes: {
+	            className: React.PropTypes.string,
+	            // Close the modal when esc is pressed? Defaults to true.
+	            keyboard: React.PropTypes.bool,
+	            onShow: React.PropTypes.func,
+	            onHide: React.PropTypes.func,
+	            animation: React.PropTypes.object,
+	            backdrop: React.PropTypes.bool,
+	            closeOnClick: React.PropTypes.bool,
+	            modalStyle: React.PropTypes.object,
+	            backdropStyle: React.PropTypes.object,
+	            contentStyle: React.PropTypes.object,
+	        },
+	
+	        getDefaultProps: function() {
+	            return {
+	                className: "",
+	                onShow: function(){},
+	                onHide: function(){},
+	                animation: animation,
+	                keyboard: true,
+	                backdrop: true,
+	                closeOnClick: true,
+	                modalStyle: {},
+	                backdropStyle: {},
+	                contentStyle: {},
+	            };
+	        },
+	
+	        getInitialState: function(){
+	            return {
+	                willHidden: false,
+	                hidden: true
+	            }
+	        },
+	
+	        hasHidden: function(){
+	            return this.state.hidden;
+	        },
+	
+	        addTransitionListener: function(node, handle){
+	            if (node) {
+	              var endListener = function(e) {
+	                  if (e && e.target !== node) {
+	                      return;
+	                  }
+	                  transitionEvents.removeEndEventListener(node, endListener);
+	                  handle();
+	              };
+	              transitionEvents.addEndEventListener(node, endListener);
+	            }
+	        },
+	
+	        handleBackdropClick: function() {
+	            if (this.props.closeOnClick) {
+	                this.hide();
+	            }
+	        },
+	
+	        render: function() {
+	
+	            var hidden = this.hasHidden();
+	            if (hidden) return null;
+	
+	            var willHidden = this.state.willHidden;
+	            var animation = this.props.animation;
+	            var modalStyle = animation.getModalStyle(willHidden);
+	            var backdropStyle = animation.getBackdropStyle(willHidden);
+	            var contentStyle = animation.getContentStyle(willHidden);
+	            var ref = animation.getRef(willHidden);
+	            var sharp = animation.getSharp && animation.getSharp(willHidden);
+	
+	            // Apply custom style properties
+	            if (this.props.modalStyle) {
+	                var prefixedModalStyle = appendVendorPrefix(this.props.modalStyle);
+	                for (var style in prefixedModalStyle) {
+	                    modalStyle[style] = prefixedModalStyle[style];
+	                }
+	            }
+	
+	            if (this.props.backdropStyle) {
+	              var prefixedBackdropStyle = appendVendorPrefix(this.props.backdropStyle);
+	                for (var style in prefixedBackdropStyle) {
+	                    backdropStyle[style] = prefixedBackdropStyle[style];
+	                }
+	            }
+	
+	            if (this.props.contentStyle) {
+	              var prefixedContentStyle = appendVendorPrefix(this.props.contentStyle);
+	                for (var style in prefixedContentStyle) {
+	                    contentStyle[style] = prefixedContentStyle[style];
+	                }
+	            }
+	
+	            var backdrop = this.props.backdrop? React.createElement("div", {style: backdropStyle, onClick: this.props.closeOnClick? this.handleBackdropClick: null}): undefined;
+	
+	            if(willHidden) {
+	                var node = this.refs[ref];
+	                this.addTransitionListener(node, this.leave);
+	            }
+	
+	            return (React.createElement("span", null, 
+	                React.createElement("div", {ref: "modal", style: modalStyle, className: this.props.className}, 
+	                    sharp, 
+	                    React.createElement("div", {ref: "content", tabIndex: "-1", style: contentStyle}, 
+	                        this.props.children
+	                    )
+	                ), 
+	                backdrop
+	             ))
+	            ;
+	        },
+	
+	        leave: function(){
+	            this.setState({
+	                hidden: true
+	            });
+	            this.props.onHide();
+	        },
+	
+	        enter: function(){
+	            this.props.onShow();
+	        },
+	
+	        show: function(){
+	            if (!this.hasHidden()) return;
+	
+	            this.setState({
+	                willHidden: false,
+	                hidden: false
+	            });
+	
+	            setTimeout(function(){
+	              var ref = this.props.animation.getRef();
+	              var node = this.refs[ref];
+	              this.addTransitionListener(node, this.enter);
+	            }.bind(this), 0);
+	        },
+	
+	        hide: function(){
+	            if (this.hasHidden()) return;
+	
+	            this.setState({
+	                willHidden: true
+	            });
+	        },
+	
+	        toggle: function(){
+	            if (this.hasHidden())
+	                this.show();
+	            else
+	                this.hide();
+	        },
+	
+	        listenKeyboard: function(event) {
+	            if (this.props.keyboard &&
+	                    (event.key === "Escape" ||
+	                     event.keyCode === 27)) {
+	                this.hide();
+	            }
+	        },
+	
+	        componentDidMount: function(){
+	            window.addEventListener("keydown", this.listenKeyboard, true);
+	        },
+	
+	        componentWillUnmount: function() {
+	            window.removeEventListener("keydown", this.listenKeyboard, true);
+	        }
+	    });
+	}
+
+
+/***/ },
+/* 166 */
+/***/ function(module, exports) {
+
+	'use strict';
+	
+	/**
+	 * EVENT_NAME_MAP is used to determine which event fired when a
+	 * transition/animation ends, based on the style property used to
+	 * define that event.
+	 */
+	var EVENT_NAME_MAP = {
+	  transitionend: {
+	    'transition': 'transitionend',
+	    'WebkitTransition': 'webkitTransitionEnd',
+	    'MozTransition': 'mozTransitionEnd',
+	    'OTransition': 'oTransitionEnd',
+	    'msTransition': 'MSTransitionEnd'
+	  },
+	
+	  animationend: {
+	    'animation': 'animationend',
+	    'WebkitAnimation': 'webkitAnimationEnd',
+	    'MozAnimation': 'mozAnimationEnd',
+	    'OAnimation': 'oAnimationEnd',
+	    'msAnimation': 'MSAnimationEnd'
+	  }
+	};
+	
+	var endEvents = [];
+	
+	function detectEvents() {
+	  var testEl = document.createElement('div');
+	  var style = testEl.style;
+	
+	  // On some platforms, in particular some releases of Android 4.x,
+	  // the un-prefixed "animation" and "transition" properties are defined on the
+	  // style object but the events that fire will still be prefixed, so we need
+	  // to check if the un-prefixed events are useable, and if not remove them
+	  // from the map
+	  if (!('AnimationEvent' in window)) {
+	    delete EVENT_NAME_MAP.animationend.animation;
+	  }
+	
+	  if (!('TransitionEvent' in window)) {
+	    delete EVENT_NAME_MAP.transitionend.transition;
+	  }
+	
+	  for (var baseEventName in EVENT_NAME_MAP) {
+	    var baseEvents = EVENT_NAME_MAP[baseEventName];
+	    for (var styleName in baseEvents) {
+	      if (styleName in style) {
+	        endEvents.push(baseEvents[styleName]);
+	        break;
+	      }
+	    }
+	  }
+	}
+	
+	if (typeof window !== 'undefined') {
+	  detectEvents();
+	}
+	
+	
+	// We use the raw {add|remove}EventListener() call because EventListener
+	// does not know how to remove event listeners and we really should
+	// clean up. Also, these events are not triggered in older browsers
+	// so we should be A-OK here.
+	
+	function addEventListener(node, eventName, eventListener) {
+	  node.addEventListener(eventName, eventListener, false);
+	}
+	
+	function removeEventListener(node, eventName, eventListener) {
+	  node.removeEventListener(eventName, eventListener, false);
+	}
+	
+	module.exports = {
+	  addEndEventListener: function(node, eventListener) {
+	    if (endEvents.length === 0) {
+	      // If CSS transitions are not supported, trigger an "end animation"
+	      // event immediately.
+	      window.setTimeout(eventListener, 0);
+	      return;
+	    }
+	    endEvents.forEach(function(endEvent) {
+	      addEventListener(node, endEvent, eventListener);
+	    });
+	  },
+	
+	  removeEndEventListener: function(node, eventListener) {
+	    if (endEvents.length === 0) {
+	      return;
+	    }
+	    endEvents.forEach(function(endEvent) {
+	      removeEventListener(node, endEvent, eventListener);
+	    });
+	  }
+	};
+
+
+/***/ },
+/* 167 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	var getVendorPropertyName = __webpack_require__(168);
+	
+	module.exports = function(target, sources) {
+	  var to = Object(target);
+	  var hasOwnProperty = Object.prototype.hasOwnProperty;
+	
+	  for (var nextIndex = 1; nextIndex < arguments.length; nextIndex++) {
+	    var nextSource = arguments[nextIndex];
+	    if (nextSource == null) {
+	      continue;
+	    }
+	
+	    var from = Object(nextSource);
+	
+	    for (var key in from) {
+	      if (hasOwnProperty.call(from, key)) {
+	        to[key] = from[key];
+	      }
+	    }
+	  }
+	
+	  var prefixed = {};
+	  for (var key in to) {
+	    prefixed[getVendorPropertyName(key)] = to[key]
+	  }
+	
+	  return prefixed
+	}
+
+
+/***/ },
+/* 168 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	var builtinStyle = __webpack_require__(169);
+	var prefixes = ['Moz', 'Webkit', 'O', 'ms'];
+	var domVendorPrefix;
+	
+	// Helper function to get the proper vendor property name. (transition => WebkitTransition)
+	module.exports = function(prop, isSupportTest) {
+	
+	  var vendorProp;
+	  if (prop in builtinStyle) return prop;
+	
+	  var UpperProp = prop.charAt(0).toUpperCase() + prop.substr(1);
+	
+	  if (domVendorPrefix) {
+	
+	    vendorProp = domVendorPrefix + UpperProp;
+	    if (vendorProp in builtinStyle) {
+	      return vendorProp;
+	    }
+	  } else {
+	
+	    for (var i = 0; i < prefixes.length; ++i) {
+	      vendorProp = prefixes[i] + UpperProp;
+	      if (vendorProp in builtinStyle) {
+	        domVendorPrefix = prefixes[i];
+	        return vendorProp;
+	      }
+	    }
+	  }
+	
+	  // if support test, not fallback to origin prop name
+	  if (!isSupportTest) {
+	    return prop;
+	  }
+	
+	}
+
+
+/***/ },
+/* 169 */
+/***/ function(module, exports) {
+
+	'use strict';
+	
+	module.exports = document.createElement('div').style;
+
+
+/***/ },
+/* 170 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	var insertRule = __webpack_require__(171);
+	var vendorPrefix = __webpack_require__(172)();
+	var index = 0;
+	
+	module.exports = function(keyframes) {
+	  // random name
+	  var name = 'anim_' + (++index) + (+new Date);
+	  var css = "@" + vendorPrefix + "keyframes " + name + " {";
+	
+	  for (var key in keyframes) {
+	    css += key + " {";
+	
+	    for (var property in keyframes[key]) {
+	      var part = ":" + keyframes[key][property] + ";";
+	      // We do vendor prefix for every property
+	      css += vendorPrefix + property + part;
+	      css += property + part;
+	    }
+	
+	    css += "}";
+	  }
+	
+	  css += "}";
+	
+	  insertRule(css);
+	
+	  return name
+	}
+
+
+/***/ },
+/* 171 */
+/***/ function(module, exports) {
+
+	'use strict';
+	
+	var extraSheet;
+	
+	module.exports = function(css) {
+	
+	  if (!extraSheet) {
+	    // First time, create an extra stylesheet for adding rules
+	    extraSheet = document.createElement('style');
+	    document.getElementsByTagName('head')[0].appendChild(extraSheet);
+	    // Keep reference to actual StyleSheet object (`styleSheet` for IE < 9)
+	    extraSheet = extraSheet.sheet || extraSheet.styleSheet;
+	  }
+	
+	  var index = (extraSheet.cssRules || extraSheet.rules).length;
+	  extraSheet.insertRule(css, index);
+	
+	  return extraSheet;
+	}
+
+
+/***/ },
+/* 172 */
+/***/ function(module, exports) {
+
+	'use strict';
+	
+	var cssVendorPrefix;
+	
+	module.exports = function() {
+	
+	  if (cssVendorPrefix) return cssVendorPrefix;
+	
+	  var styles = window.getComputedStyle(document.documentElement, '');
+	  var pre = (Array.prototype.slice.call(styles).join('').match(/-(moz|webkit|ms)-/) || (styles.OLink === '' && ['', 'o']))[1];
+	
+	  return cssVendorPrefix = '-' + pre + '-';
+	}
+
+
+/***/ },
+/* 173 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var React = __webpack_require__(1);
 	var ReactDOM = __webpack_require__(158);
 	
-	var Pile = React.createClass({
-	  displayName: 'Pile',
+	var Tile = React.createClass({
+	  displayName: 'Tile',
 	
-	  getInitialState: function () {
-	    return {
-	      active: 0
-	    };
-	  },
 	
-	  open: function () {
-	    if (this.props.active === 1) {
-	      this.setState({
-	        active: 1
-	      });
-	    } else {
-	      this.setState({
-	        active: 2
-	      });
-	    }
+	  move: function () {
+	    this.props.move(this.props.id, this.props.active);
 	  },
 	
 	  render: function () {
 	    var style = "";
 	
-	    if (this.state.active === 1) {
-	      style += "animated flipInX correct";
-	    } else if (this.state.active === 2) {
-	      style += "animated flipInX false";
+	    if (this.props.status === 1) {
+	      if (this.props.active === 1) {
+	        style += "animated correct";
+	      } else {
+	        style += "animated false";
+	      }
+	    } else {
+	      style += "animated flash closed";
 	    }
 	
-	    return React.createElement('div', { className: style, onClick: this.open });
+	    return React.createElement('div', { className: style, onClick: this.move });
 	  }
+	
 	});
 	
-	module.exports = Pile;
+	module.exports = Tile;
+
+/***/ },
+/* 174 */
+/***/ function(module, exports) {
+
+	/* WEBPACK VAR INJECTION */(function(global) {/*
+	 *  Copyright (c) 2015-present, Facebook, Inc.
+	 *  All rights reserved.
+	 *
+	 *  This source code is licensed under the BSD-style license found in the
+	 *  LICENSE file in the root directory of this source tree. An additional grant
+	 *  of patent rights can be found in the PATENTS file in the same directory.
+	 *
+	 */
+	'use strict';
+	
+	var GLOBAL = typeof window === 'undefined' ? global : window;
+	
+	var setter = function(_setter, _clearer, array) {
+	  return function(callback, delta) {
+	    var id = _setter(function() {
+	      _clearer.call(this, id);
+	      callback.apply(this, arguments);
+	    }.bind(this), delta);
+	
+	    if (!this[array]) {
+	      this[array] = [id];
+	    } else {
+	      this[array].push(id);
+	    }
+	    return id;
+	  };
+	};
+	
+	var clearer = function(_clearer, array) {
+	  return function(id) {
+	    if (this[array]) {
+	      var index = this[array].indexOf(id);
+	      if (index !== -1) {
+	        this[array].splice(index, 1);
+	      }
+	    }
+	    _clearer(id);
+	  };
+	};
+	
+	var _timeouts = 'TimerMixin_timeouts';
+	var _clearTimeout = clearer(GLOBAL.clearTimeout, _timeouts);
+	var _setTimeout = setter(GLOBAL.setTimeout, _clearTimeout, _timeouts);
+	
+	var _intervals = 'TimerMixin_intervals';
+	var _clearInterval = clearer(GLOBAL.clearInterval, _intervals);
+	var _setInterval = setter(GLOBAL.setInterval, function() {/* noop */}, _intervals);
+	
+	var _immediates = 'TimerMixin_immediates';
+	var _clearImmediate = clearer(GLOBAL.clearImmediate, _immediates);
+	var _setImmediate = setter(GLOBAL.setImmediate, _clearImmediate, _immediates);
+	
+	var _rafs = 'TimerMixin_rafs';
+	var _cancelAnimationFrame = clearer(GLOBAL.cancelAnimationFrame, _rafs);
+	var _requestAnimationFrame = setter(GLOBAL.requestAnimationFrame, _cancelAnimationFrame, _rafs);
+	
+	var TimerMixin = {
+	  componentWillUnmount: function() {
+	    this[_timeouts] && this[_timeouts].forEach(function(id) {
+	      GLOBAL.clearTimeout(id);
+	    });
+	    this[_timeouts] = null;
+	    this[_intervals] && this[_intervals].forEach(function(id) {
+	      GLOBAL.clearInterval(id);
+	    });
+	    this[_intervals] = null;
+	    this[_immediates] && this[_immediates].forEach(function(id) {
+	      GLOBAL.clearImmediate(id);
+	    });
+	    this[_immediates] = null;
+	    this[_rafs] && this[_rafs].forEach(function(id) {
+	      GLOBAL.cancelAnimationFrame(id);
+	    });
+	    this[_rafs] = null;
+	  },
+	
+	  setTimeout: _setTimeout,
+	  clearTimeout: _clearTimeout,
+	
+	  setInterval: _setInterval,
+	  clearInterval: _clearInterval,
+	
+	  setImmediate: _setImmediate,
+	  clearImmediate: _clearImmediate,
+	
+	  requestAnimationFrame: _requestAnimationFrame,
+	  cancelAnimationFrame: _cancelAnimationFrame,
+	};
+	
+	module.exports = TimerMixin;
+	
+	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ }
 /******/ ]);
