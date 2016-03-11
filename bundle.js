@@ -19956,66 +19956,15 @@
 	  },
 	
 	  render: function () {
-	    var instruction;
-	    if (this.state.game === undefined) {
-	      instruction = React.createElement(
-	        'div',
-	        { className: 'instruction', id: 'instruction' },
-	        React.createElement(
-	          'ul',
-	          null,
-	          React.createElement(
-	            'li',
-	            null,
-	            React.createElement(
-	              'h1',
-	              null,
-	              'Memory matrix'
-	            )
-	          ),
-	          React.createElement(
-	            'li',
-	            null,
-	            React.createElement(
-	              'p',
-	              null,
-	              'How good is your memory? Try to memorise all the blue tiles and find them all!'
-	            )
-	          ),
-	          React.createElement(
-	            'li',
-	            null,
-	            React.createElement(
-	              'li',
-	              null,
-	              React.createElement(
-	                'button',
-	                { onClick: function () {
-	                    document.getElementById("instruction").style.display = "none";
-	                    this.restart();
-	                  }.bind(this) },
-	                'START'
-	              )
-	            )
-	          ),
-	          React.createElement(
-	            'li',
-	            null,
-	            React.createElement('div', { className: 'instruction-img' })
-	          )
-	        )
-	      );
-	    }
 	    return React.createElement(
 	      'div',
 	      { className: 'mm-display' },
-	      instruction,
 	      React.createElement(
 	        Modal,
 	        { ref: 'modal', className: 'modalWindow' },
 	        this.modalContent()
 	      ),
-	      React.createElement(Info, { game: this.state }),
+	      React.createElement(Info, { game: this.state, restart: this.restart }),
 	      React.createElement(
 	        'div',
 	        { className: 'board-container' },
@@ -20076,9 +20025,84 @@
 	  displayName: 'Info',
 	
 	  render: function () {
+	
+	    var instruction;
+	    if (this.props.game.game === undefined || this.props.game.level.id < 3) {
+	      instruction = React.createElement(
+	        'div',
+	        { className: 'ingame-instruction' },
+	        React.createElement(
+	          'ul',
+	          null,
+	          React.createElement(
+	            'li',
+	            null,
+	            '1. Memorize the pattern and location of the blue tiles.'
+	          ),
+	          React.createElement(
+	            'li',
+	            null,
+	            '2. After they turn yellow find blue tiles and click on them.'
+	          )
+	        )
+	      );
+	    }
+	
+	    var splash;
+	    if (this.props.game.game === undefined) {
+	      splash = React.createElement(
+	        'div',
+	        { className: 'instruction', id: 'instruction' },
+	        React.createElement(
+	          'ul',
+	          null,
+	          React.createElement(
+	            'li',
+	            null,
+	            React.createElement(
+	              'h1',
+	              null,
+	              'Memory matrix'
+	            )
+	          ),
+	          React.createElement(
+	            'li',
+	            null,
+	            React.createElement(
+	              'p',
+	              null,
+	              'How good is your memory? Try to memorize the pattern and find all the blue tiles!'
+	            )
+	          ),
+	          React.createElement(
+	            'li',
+	            null,
+	            React.createElement(
+	              'li',
+	              null,
+	              React.createElement(
+	                'button',
+	                { onClick: function () {
+	                    document.getElementById("instruction").style.display = "none";
+	                    this.props.restart();
+	                  }.bind(this) },
+	                'START'
+	              )
+	            )
+	          ),
+	          React.createElement(
+	            'li',
+	            null,
+	            React.createElement('div', { className: 'instruction-img' })
+	          )
+	        )
+	      );
+	    }
+	
 	    return React.createElement(
 	      'div',
-	      { id: 'info' },
+	      { className: 'info' },
+	      splash,
 	      React.createElement(
 	        'ul',
 	        null,
@@ -20097,7 +20121,8 @@
 	          null,
 	          "SCORE " + this.props.game.score
 	        )
-	      )
+	      ),
+	      instruction
 	    );
 	  }
 	});
@@ -20109,7 +20134,7 @@
 /***/ function(module, exports) {
 
 	var Levels = {
-	  1: { id: 1, board: 'xs', tiles: 9, active: 3, time: 3000 },
+	  1: { id: 1, board: 'xs', tiles: 9, active: 3, time: 4000 },
 	  2: { id: 2, board: 'xs', tiles: 9, active: 4, time: 1000 },
 	  3: { id: 3, board: 'xs', tiles: 9, active: 5, time: 1000 },
 	  4: { id: 4, board: 's', tiles: 16, active: 6, time: 1000 },

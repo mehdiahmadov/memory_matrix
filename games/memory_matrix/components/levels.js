@@ -1,5 +1,5 @@
 var Levels = {
-  1:  { id: 1,  board: 'xs',   tiles:  9,  active: 3,  time:  3000},
+  1:  { id: 1,  board: 'xs',   tiles:  9,  active: 3,  time:  4000},
   2:  { id: 2,  board: 'xs',   tiles:  9,  active: 4,  time:  1000},
   3:  { id: 3,  board: 'xs',   tiles:  9,  active: 5,  time:  1000},
   4:  { id: 4,  board: 's',    tiles:  16, active: 6,  time:  1000},
