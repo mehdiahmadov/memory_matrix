@@ -240,37 +240,12 @@ var Game = React.createClass({
   },
 
   render: function () {
-    var instruction;
-    if (this.state.game === undefined){
-      instruction =
-              <div className="instruction" id="instruction">
-                <ul>
-                  <li><h1>Memory matrix</h1></li>
-                  <li>
-                    <p>
-                      How good is your memory? Try to memorise all the blue tiles and find them all!
-                    </p>
-                  </li>
-                  <li>
-                  <li>
-                      <button onClick={
-                        function (){
-                          document.getElementById("instruction").style.display = "none";
-                          this.restart();
-                        }.bind(this)
-                      }>START</button></li>
-                  </li>
-                  <li><div className="instruction-img"></div></li>
-                </ul>
-              </div>;
-    }
     return(
       <div className="mm-display">
-        {instruction}
         <Modal ref="modal" className='modalWindow' >
           {this.modalContent()}
         </Modal>
-        <Info game={this.state} />
+        <Info game={this.state} restart={this.restart}/>
         <div className="board-container">
           <Board board   = {this.state.level.board}
                  tiles   = {this.state.tiles}

@@ -7,12 +7,12 @@
   flex-direction: column;
 }
 
-#info{
+.info{
   width: 100%;
   height: 50px;
 }
 
-#info ul {
+.info > ul {
   list-style: none;
   display: -webkit-box;
   display: -moz-box;
@@ -23,7 +23,7 @@
   padding: 8px;
 }
 
-#info li {
+.info > ul > li {
   background-color: #ecf0f1;
   border-radius: 3px;
   padding: 5px 5px 5px 5px;
@@ -218,7 +218,7 @@ button:focus {
   justify-content: center;
 }
 
-.instruction li {
+.instruction ul li {
   padding: 5px;
 }
 
@@ -239,4 +239,25 @@ button:focus {
   background-image: url("../img/instruction.png");
   width: 673px;
   height: 444px;
+}
+
+.ingame-instruction ul{
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  margin-top: 30px;
+}
+
+.ingame-instruction li {
+  background-color: #2ecc71;
+  margin: 5px;
+  border-radius: 3px;
+  padding: 5px 5px 5px 5px;
+  margin-left: 5px;
+  display: flex;
+  align-items: center;
+  font-family: 'Roboto', sans-serif;
+  font-size: 18px;
+  font-weight: bolder;
 }
