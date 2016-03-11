@@ -196,3 +196,47 @@ button:active {
 button:focus {
   outline: none
 }
+
+.instruction{
+  margin-top: 80px;
+  position: absolute;
+  border-radius: 5px;
+  z-index: 2;
+  width: 800px;
+  height: 650px;
+  background-color: rgba(230, 126, 34,1.0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  box-shadow: 1px 1px 5px 0px rgba(0,0,0,1);
+}
+.instruction ul{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.instruction li {
+  padding: 5px;
+}
+
+.instruction h1 {
+  margin: 0 auto;
+  font-size: 56px;
+  font-family: "Roboto", sans-serif;
+  color: rgba(236, 240, 241,1.0);
+}
+
+.instruction p {
+  font-family: "Roboto", sans-serif;
+  font-size: 20px;
+  color: #ecf0f1;
+}
+
+.instruction-img{
+  background-image: url("../img/instruction.png");
+  width: 673px;
+  height: 444px;
+}
