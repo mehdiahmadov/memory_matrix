@@ -20,10 +20,6 @@ var Game = React.createClass({
     });
   },
 
-  componentWillMount: function() {
-    this.runBoard();
-  },
-
   componentDidUpdate: function(){
     if (this.state.tiles.length === 0){
       this.runBoard();
@@ -34,7 +30,7 @@ var Game = React.createClass({
     this.generateBoard();
     this.setTimeout( function() {
       this.closeBoard();
-    }.bind(this), 3000);
+    }.bind(this), this.state.level.time);
   },
 
   levelUp: function () {
@@ -244,8 +240,33 @@ var Game = React.createClass({
   },
 
   render: function () {
+    var instruction;
+    if (this.state.game === undefined){
+      instruction =
+              <div className="instruction" id="instruction">
+                <ul>
+                  <li><h1>Memory matrix</h1></li>
+                  <li>
+                    <p>
+                      How good is your memory? Try to memorise all the blue tiles and find them all!
+                    </p>
+                  </li>
+                  <li>
+                  <li>
+                      <button onClick={
+                        function (){
+                          document.getElementById("instruction").style.display = "none";
+                          this.restart();
+                        }.bind(this)
+                      }>START</button></li>
+                  </li>
+                  <li><div className="instruction-img"></div></li>
+                </ul>
+              </div>;
+    }
     return(
       <div className="mm-display">
+        {instruction}
         <Modal ref="modal" className='modalWindow' >
           {this.modalContent()}
         </Modal>

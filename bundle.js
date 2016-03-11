@@ -19703,10 +19703,6 @@
 	    };
 	  },
 	
-	  componentWillMount: function () {
-	    this.runBoard();
-	  },
-	
 	  componentDidUpdate: function () {
 	    if (this.state.tiles.length === 0) {
 	      this.runBoard();
@@ -19717,7 +19713,7 @@
 	    this.generateBoard();
 	    this.setTimeout(function () {
 	      this.closeBoard();
-	    }.bind(this), 3000);
+	    }.bind(this), this.state.level.time);
 	  },
 	
 	  levelUp: function () {
@@ -19960,9 +19956,60 @@
 	  },
 	
 	  render: function () {
+	    var instruction;
+	    if (this.state.game === undefined) {
+	      instruction = React.createElement(
+	        'div',
+	        { className: 'instruction', id: 'instruction' },
+	        React.createElement(
+	          'ul',
+	          null,
+	          React.createElement(
+	            'li',
+	            null,
+	            React.createElement(
+	              'h1',
+	              null,
+	              'Memory matrix'
+	            )
+	          ),
+	          React.createElement(
+	            'li',
+	            null,
+	            React.createElement(
+	              'p',
+	              null,
+	              'How good is your memory? Try to memorise all the blue tiles and find them all!'
+	            )
+	          ),
+	          React.createElement(
+	            'li',
+	            null,
+	            React.createElement(
+	              'li',
+	              null,
+	              React.createElement(
+	                'button',
+	                { onClick: function () {
+	                    document.getElementById("instruction").style.display = "none";
+	                    this.restart();
+	                  }.bind(this) },
+	                'START'
+	              )
+	            )
+	          ),
+	          React.createElement(
+	            'li',
+	            null,
+	            React.createElement('div', { className: 'instruction-img' })
+	          )
+	        )
+	      );
+	    }
 	    return React.createElement(
 	      'div',
 	      { className: 'mm-display' },
+	      instruction,
 	      React.createElement(
 	        Modal,
 	        { ref: 'modal', className: 'modalWindow' },
@@ -20062,31 +20109,38 @@
 /***/ function(module, exports) {
 
 	var Levels = {
-	  1: { id: 1, board: 'xs', tiles: 9, active: 3 },
-	  2: { id: 2, board: 'xs', tiles: 9, active: 4 },
-	  3: { id: 3, board: 'xs', tiles: 9, active: 5 },
-	  4: { id: 4, board: 's', tiles: 16, active: 6 },
-	  5: { id: 5, board: 's', tiles: 16, active: 7 },
-	  6: { id: 6, board: 's', tiles: 16, active: 8 },
-	  7: { id: 7, board: 'm', tiles: 25, active: 9 },
-	  8: { id: 8, board: 'm', tiles: 25, active: 10 },
-	  9: { id: 9, board: 'm', tiles: 25, active: 11 },
-	  10: { id: 10, board: 'l', tiles: 36, active: 12 },
-	  11: { id: 11, board: 'l', tiles: 36, active: 13 },
-	  12: { id: 12, board: 'l', tiles: 36, active: 14 },
-	  13: { id: 13, board: 'xl', tiles: 49, active: 15 },
-	  14: { id: 14, board: 'xl', tiles: 49, active: 16 },
-	  15: { id: 15, board: 'xl', tiles: 49, active: 17 },
-	  16: { id: 16, board: 'xxl', tiles: 64, active: 18 },
-	  17: { id: 17, board: 'xxl', tiles: 64, active: 19 },
-	  18: { id: 18, board: 'xxl', tiles: 64, active: 20 },
-	  19: { id: 19, board: 'xxxl', tiles: 81, active: 21 },
-	  20: { id: 20, board: 'xxxl', tiles: 81, active: 22 },
-	  21: { id: 21, board: 'xxxl', tiles: 81, active: 23 },
-	  22: { id: 21, board: 'xxxl', tiles: 81, active: 24 },
-	  23: { id: 21, board: 'xxxl', tiles: 81, active: 25 },
-	  24: { id: 21, board: 'xxxl', tiles: 81, active: 26 },
-	  25: { id: 21, board: 'xxxl', tiles: 81, active: 27 }
+	  1: { id: 1, board: 'xs', tiles: 9, active: 3, time: 3000 },
+	  2: { id: 2, board: 'xs', tiles: 9, active: 4, time: 1000 },
+	  3: { id: 3, board: 'xs', tiles: 9, active: 5, time: 1000 },
+	  4: { id: 4, board: 's', tiles: 16, active: 6, time: 1000 },
+	  5: { id: 5, board: 's', tiles: 16, active: 7, time: 1500 },
+	  6: { id: 6, board: 's', tiles: 16, active: 8, time: 1500 },
+	  7: { id: 7, board: 'm', tiles: 25, active: 9, time: 1500 },
+	  8: { id: 8, board: 'm', tiles: 25, active: 10, time: 2000 },
+	  9: { id: 9, board: 'm', tiles: 25, active: 11, time: 2500 },
+	  10: { id: 10, board: 'l', tiles: 36, active: 12, time: 2500 },
+	  11: { id: 11, board: 'l', tiles: 36, active: 13, time: 2500 },
+	  12: { id: 12, board: 'l', tiles: 36, active: 14, time: 2500 },
+	  13: { id: 13, board: 'xl', tiles: 49, active: 15, time: 3000 },
+	  14: { id: 14, board: 'xl', tiles: 49, active: 16, time: 3000 },
+	  15: { id: 15, board: 'xl', tiles: 49, active: 17, time: 3000 },
+	  16: { id: 16, board: 'xxl', tiles: 64, active: 18, time: 4000 },
+	  17: { id: 17, board: 'xxl', tiles: 64, active: 19, time: 4000 },
+	  18: { id: 18, board: 'xxl', tiles: 64, active: 20, time: 4000 },
+	  19: { id: 19, board: 'xxxl', tiles: 81, active: 21, time: 4000 },
+	  20: { id: 20, board: 'xxxl', tiles: 81, active: 22, time: 4000 },
+	  21: { id: 21, board: 'xxxl', tiles: 81, active: 23, time: 4000 },
+	  22: { id: 22, board: 'xxxl', tiles: 81, active: 24, time: 4000 },
+	  23: { id: 23, board: 'xxxl', tiles: 81, active: 25, time: 4000 },
+	  24: { id: 24, board: 'xxxl', tiles: 81, active: 26, time: 4000 },
+	  25: { id: 25, board: 'xxxl', tiles: 81, active: 27, time: 4000 },
+	  26: { id: 26, board: 'xxxl', tiles: 81, active: 28, time: 4000 },
+	  27: { id: 27, board: 'xxxl', tiles: 81, active: 29, time: 4000 },
+	  28: { id: 28, board: 'xxxl', tiles: 81, active: 30, time: 5000 },
+	  29: { id: 29, board: 'xxxl', tiles: 81, active: 31, time: 5000 },
+	  30: { id: 30, board: 'xxxl', tiles: 81, active: 32, time: 5000 },
+	  31: { id: 31, board: 'xxxl', tiles: 81, active: 33, time: 5000 },
+	  32: { id: 32, board: 'xxxl', tiles: 81, active: 34, time: 5000 }
 	};
 	
 	module.exports = Levels;
