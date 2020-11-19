@@ -15,7 +15,7 @@ There are  5 React components in the game:
   - **Tile**. Tiles of the board
 
 ## Live
-[Click here to play](https://mexxxxx.github.io/memory_matrix)
+[Click here to play](https://mehdiahmadov.github.io/memory_matrix)
 
 ## Screenshot
 
